@@ -53,7 +53,7 @@ namespace JiraApiApp
             return Convert.ToBase64String(byteCredentials);
         }
 
-        public static void SendEmail(string message)
+        static void SendEmail(string message)
         {
             string to = ConfigurationManager.AppSettings.Get("mailTo");
             string from = ConfigurationManager.AppSettings.Get("mailFrom");
