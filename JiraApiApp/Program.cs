@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using JiraApiApp.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
+using System.Net;
 
 namespace JiraApiApp
 {
@@ -18,6 +20,7 @@ namespace JiraApiApp
         {
             HttpClient httpClient = new HttpClient() { BaseAddress = new Uri(ConfigurationManager.AppSettings.Get("url")) };
             List<IssueModel> resault = new List<IssueModel>();
+            string message = string.Empty;
 
             string base64Credentials = GetEncodedCredentials();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Credentials);
@@ -33,11 +36,11 @@ namespace JiraApiApp
 
                 foreach(IssueModel issue in resault)
                 {
-                    Console.WriteLine($"{issue.Key}  {issue.Fields.LastViewed?.ToString("dd/MM/yy")}");
+                    message += $"{issue.Key}  {issue.Fields.LastViewed?.ToString("dd/MM/yy")} \n";
                 }
             }
 
-            Console.ReadLine();
+            SendEmail(message);
         }
 
         static string GetEncodedCredentials()
@@ -48,6 +51,45 @@ namespace JiraApiApp
 
             byte[] byteCredentials = UTF8Encoding.UTF8.GetBytes(mergedCredentials);
             return Convert.ToBase64String(byteCredentials);
+        }
+
+        public static void SendEmail(string message)
+        {
+            string to = ConfigurationManager.AppSettings.Get("mailTo");
+            string from = ConfigurationManager.AppSettings.Get("mailFrom");
+            MailMessage mailMessage = new MailMessage(from, to);
+            mailMessage.Subject = "Unresolved tickets Jira";
+            mailMessage.Body = message;
+
+            SmtpClient client = SetSmtpClient();
+
+            try
+            {
+                client.Send(mailMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception caught in CreateTestMessage2(): {0}",
+                    ex.ToString());
+            }
+
+        }
+
+        public static SmtpClient SetSmtpClient()
+        {
+            SmtpClient client = new SmtpClient() 
+            {
+                Host = "smtp.office365.com",
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(ConfigurationManager.AppSettings.Get("mailFrom"),
+                                     ConfigurationManager.AppSettings.Get("mailFromPass")),
+                Timeout = 30000
+            };
+
+            return client;
         }
     }
 }
