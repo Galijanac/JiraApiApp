@@ -26,7 +26,7 @@ namespace JiraApiApp
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Credentials);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            HttpResponseMessage respons = httpClient.GetAsync("rest/api/2/search?jql=project=SD&maxResults=-1&fields=lastViewed,resolutiondate").Result;
+            HttpResponseMessage respons = httpClient.GetAsync($"rest/api/2/search?jql=project={ConfigurationManager.AppSettings.Get("projectCode")}&maxResults=-1&fields=lastViewed,resolutiondate").Result;
 
             if (respons.IsSuccessStatusCode)
             {
